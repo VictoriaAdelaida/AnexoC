@@ -1,0 +1,112 @@
+---
+title: "ARTICULO VICTORIA 2025"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    number_sections: true
+    theme: spacelab
+    highlight: haddock
+    df_print: paged
+    toc: true
+    toc_float: true
+    printcode: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(prompt=TRUE,fig.path='figurasR/',warning=FALSE,message=FALSE,fig.pos="H",fig.align="center",cache=FALSE,collapse=TRUE,comment="#>")
+knitr::write_bib(c("knitr","lubridate","tidyverse","markdown","rmarkdown","curl","ggplot2","flexdashboard","htmlwidgets","png","jpeg","htmltools","devtools","highcharter","plotly","dplyr","xtable","stringr","DT","magrittr","kableExtra","prettydoc","formattable","leaflet","shiny","data.table","mosaic","gridExtra","plotrix"))
+library(knitr)
+library(corrplot)
+library(markdown)
+library(rmarkdown)
+library(prettydoc)
+library(flexdashboard)
+library(lubridate)
+library(tidyverse)
+library(curl)
+library(magrittr)
+library(stringr)
+library(png)
+library(jpeg)
+library(htmltools)
+library(devtools)
+library(ggplot2)
+library(gridExtra)
+library(xtable)
+library(DT)
+library(kableExtra)
+library(formattable)
+library(shiny)
+library(plotly)
+library(dplyr)
+library(plotrix)
+library(leaflet)
+library(highcharter)
+library(htmlwidgets)
+library(mosaic)
+library(MASS)
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+#Evitar notación científica#
+options(scipen=999)
+#Creo funciones para colorear#
+mis.colores<-colorRampPalette(c("#FFF700","#0FFFFF"))
+col.num<-colorNumeric(mis.colores(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+mis.colores2<-colorRampPalette(c("#F40000","navy"))
+col.num2<-colorNumeric(mis.colores2(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+#construyo media recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+meanr<-function(a) {
+mean(a,trim=0.1,na.rm=TRUE)
+}
+#construyo desviación típica recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+sdr<-function(a) {
+a<-a[!is.na(a)]
+a<-a[order(a)]
+b<-a[floor(length(a)/20):floor(length(a)*19/20)]
+sd(b)
+}
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+#IMPORTANTE! 
+#En la siguiente linea se debe cambiar la ubicación predeterminada del archivo por la que tenga en el computador de quien corre el codigo
+
+dbv <- read.table("C:/Users/Usuario/Downloads/DB.txt", 
+                  header = TRUE, 
+                  sep = "\t", 
+                  na.strings = "NA", 
+                  strip.white = TRUE, 
+                  fileEncoding = "UTF-8")
+```
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+
+cor.test.p <- function(x) {
+  p.mat <- matrix(NA, ncol(x), ncol(x))
+  colnames(p.mat) <- colnames(x)
+  rownames(p.mat) <- colnames(x)
+  for (i in 1:(ncol(x)-1)) {
+    for (j in (i+1):ncol(x)) {
+      p.mat[i, j] <- cor.test(x[,i], x[,j], method="pearson")$p.value
+      p.mat[j, i] <- p.mat[i, j]
+    }
+  }
+  return(p.mat)
+}
+
+p_values_matrix <- cor.test.p(dbv[, c("genero", "edad", "colegio", "estrato", "ingles", "curso", "pregrado", "semestre", "uso_carrera", "frecuencia_ocio", "frecuencia_academico", "total_extranjerismos", "total_frecuencia")])
+print(p_values_matrix)
+
+
+cor_matrix <- cor(dbv[, c("genero", "edad", "colegio", "estrato", "ingles", "curso", "pregrado", "semestre", "uso_carrera", "frecuencia_ocio", "frecuencia_academico","total_extranjerismos", "total_frecuencia")], use = "complete.obs")
+
+
+# Dibujamos un gráfico de correlaciones
+corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+
+```

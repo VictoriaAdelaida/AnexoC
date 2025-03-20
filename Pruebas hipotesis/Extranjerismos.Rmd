@@ -1,0 +1,179 @@
+---
+title: "ARTICULO VICTORIA 2025"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    number_sections: true
+    theme: spacelab
+    highlight: haddock
+    df_print: paged
+    toc: true
+    toc_float: true
+    printcode: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(prompt=TRUE,fig.path='figurasR/',warning=FALSE,message=FALSE,fig.pos="H",fig.align="center",cache=FALSE,collapse=TRUE,comment="#>")
+knitr::write_bib(c("knitr","lubridate","tidyverse","markdown","rmarkdown","curl","ggplot2","flexdashboard","htmlwidgets","png","jpeg","htmltools","devtools","highcharter","plotly","dplyr","xtable","stringr","DT","magrittr","kableExtra","prettydoc","formattable","leaflet","shiny","data.table","mosaic","gridExtra","plotrix"))
+library(knitr)
+library(markdown)
+library(rmarkdown)
+library(prettydoc)
+library(flexdashboard)
+library(lubridate)
+library(tidyverse)
+library(curl)
+library(magrittr)
+library(stringr)
+library(png)
+library(jpeg)
+library(htmltools)
+library(devtools)
+library(ggplot2)
+library(gridExtra)
+library(xtable)
+library(DT)
+library(kableExtra)
+library(formattable)
+library(shiny)
+library(plotly)
+library(dplyr)
+library(plotrix)
+library(leaflet)
+library(highcharter)
+library(htmlwidgets)
+library(mosaic)
+```
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+#Evitar notación científica#
+options(scipen=999)
+#Creo funciones para colorear#
+mis.colores<-colorRampPalette(c("#FFF700","#0FFFFF"))
+col.num<-colorNumeric(mis.colores(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+mis.colores2<-colorRampPalette(c("#F40000","navy"))
+col.num2<-colorNumeric(mis.colores2(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+#construyo media recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+meanr<-function(a) {
+mean(a,trim=0.1,na.rm=TRUE)
+}
+#construyo desviación típica recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+sdr<-function(a) {
+a<-a[!is.na(a)]
+a<-a[order(a)]
+b<-a[floor(length(a)/20):floor(length(a)*19/20)]
+sd(b)
+}
+```
+
+
+
+# DBVictoria
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+
+#IMPORTANTE! 
+#En la siguiente linea se debe cambiar la ubicación predeterminada del archivo por la que tenga en el computador de quien corre el codigo
+
+dbv <- read.table("C:/Users/Usuario/Downloads/DB.txt", 
+                  header = TRUE, 
+                  sep = "\t", 
+                  na.strings = "NA", 
+                  strip.white = TRUE, 
+                  fileEncoding = "UTF-8")
+
+```
+
+
+Comparacion extranjerismos
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+# Create an empty list to store results
+extranjerismos_por_grupo <- list(
+  Grupo_0 = character(),
+  Grupo_1 = character(),
+  Grupo_2 = character(),
+  Grupo_3 = character()
+)
+
+# Loop through all extranjerismos (assuming they start at column 13)
+for (i in 13:ncol(dbv)) {
+  # Extract counts per group (sum occurrences)
+  x_0 <- sum(dbv[, i][dbv$pregrado == 0], na.rm = TRUE)
+  x_1 <- sum(dbv[, i][dbv$pregrado == 1], na.rm = TRUE)
+  x_2 <- sum(dbv[, i][dbv$pregrado == 2], na.rm = TRUE)
+  x_3 <- sum(dbv[, i][dbv$pregrado == 3], na.rm = TRUE)
+  
+  # Get the number of non-NA responses for each group
+  n_0 <- sum(!is.na(dbv[, i][dbv$pregrado == 0]))
+  n_1 <- sum(!is.na(dbv[, i][dbv$pregrado == 1]))
+  n_2 <- sum(!is.na(dbv[, i][dbv$pregrado == 2]))
+  n_3 <- sum(!is.na(dbv[, i][dbv$pregrado == 3]))
+  
+  # Create a matrix of counts and valid responses per group
+  x_counts <- c(x_0, x_1, x_2, x_3)
+  n_counts <- c(n_0, n_1, n_2, n_3)
+
+
+  # Ensure that counts are not greater than the number of responses
+  if (sum(x_counts) > 0 && all(x_counts <= n_counts, na.rm = TRUE)) {
+    for (g in 1:4) {
+      # Compare this group against all others combined
+      x_group <- x_counts[g]
+      n_group <- n_counts[g]
+      
+      x_other <- sum(x_counts) - x_group
+      n_other <- sum(n_counts) - n_group
+
+      # Ensure valid proportions (avoid division by zero and invalid cases)
+      if (n_group > 0 && n_other > 0 && x_group <= n_group && x_other <= n_other) {
+        test <- prop.test(x = c(x_group, x_other), n = c(n_group, n_other), alternative = "greater", conf.level = 0.90)
+        
+        # If significant, add extranjerismo to the corresponding group
+        if (test$p.value < 0.05) {
+          extranjerismos_por_grupo[[paste0("Grupo_", g - 1)]] <- c(extranjerismos_por_grupo[[paste0("Grupo_", g - 1)]], colnames(dbv)[i])
+        }
+      }
+    }
+  } else {
+    print("error")
+  }
+}
+
+# Print 
+print(extranjerismos_por_grupo)
+
+```
+
+#print
+
+```{r include=FALSE,results='asis',echo=FALSE}
+extranjerismos_por_grupo <- list(
+  Grupo_0 = unique(extranjerismos_por_grupo$Grupo_0),
+  Grupo_1 = unique(extranjerismos_por_grupo$Grupo_1),
+  Grupo_2 = unique(extranjerismos_por_grupo$Grupo_2),
+  Grupo_3 = unique(extranjerismos_por_grupo$Grupo_3)
+)
+
+# Find the max number of words in any group to standardize column lengths
+max_length <- max(sapply(extranjerismos_por_grupo, length))
+
+# Convert to a matrix (filling empty spaces with NA)
+extranjerismos_matrix <- do.call(cbind, lapply(extranjerismos_por_grupo, function(words) {
+  c(words, rep(NA, max_length - length(words)))  # Fill with NA if shorter
+}))
+
+# Set column names to match groups
+colnames(extranjerismos_matrix) <- c("Filologia", "Licenciatura", "Quimica", "Materiales")
+
+# Print the matrix nicely
+print(extranjerismos_matrix, quote = FALSE, na.print = "")
+
+```

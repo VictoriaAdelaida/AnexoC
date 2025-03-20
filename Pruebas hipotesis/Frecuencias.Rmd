@@ -1,0 +1,211 @@
+---
+title: "ARTICULO VICTORIA 2025"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    number_sections: true
+    theme: spacelab
+    highlight: haddock
+    df_print: paged
+    toc: true
+    toc_float: true
+    printcode: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(prompt=TRUE,fig.path='figurasR/',warning=FALSE,message=FALSE,fig.pos="H",fig.align="center",cache=FALSE,collapse=TRUE,comment="#>")
+knitr::write_bib(c("knitr","lubridate","tidyverse","markdown","rmarkdown","curl","ggplot2","flexdashboard","htmlwidgets","png","jpeg","htmltools","devtools","highcharter","plotly","dplyr","xtable","stringr","DT","magrittr","kableExtra","prettydoc","formattable","leaflet","shiny","data.table","mosaic","gridExtra","plotrix"))
+library(knitr)
+library(markdown)
+library(rmarkdown)
+library(prettydoc)
+library(flexdashboard)
+library(lubridate)
+library(tidyverse)
+library(curl)
+library(magrittr)
+library(stringr)
+library(png)
+library(jpeg)
+library(htmltools)
+library(devtools)
+library(ggplot2)
+library(gridExtra)
+library(xtable)
+library(DT)
+library(kableExtra)
+library(formattable)
+library(shiny)
+library(plotly)
+library(dplyr)
+library(plotrix)
+library(leaflet)
+library(highcharter)
+library(htmlwidgets)
+library(mosaic)
+```
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+#Evitar notación científica#
+options(scipen=999)
+#Creo funciones para colorear#
+mis.colores<-colorRampPalette(c("#FFF700","#0FFFFF"))
+col.num<-colorNumeric(mis.colores(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+mis.colores2<-colorRampPalette(c("#F40000","navy"))
+col.num2<-colorNumeric(mis.colores2(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+#construyo media recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+meanr<-function(a) {
+mean(a,trim=0.1,na.rm=TRUE)
+}
+#construyo desviación típica recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+sdr<-function(a) {
+a<-a[!is.na(a)]
+a<-a[order(a)]
+b<-a[floor(length(a)/20):floor(length(a)*19/20)]
+sd(b)
+}
+```
+
+
+
+# DBVictoria
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+
+#IMPORTANTE! 
+#En la siguiente linea se debe cambiar la ubicación predeterminada del archivo por la que tenga en el computador de quien corre el codigo
+
+dbv <- read.table("C:/Users/Usuario/Downloads/DB.txt", 
+                  header = TRUE, 
+                  sep = "\t", 
+                  na.strings = "NA", 
+                  strip.white = TRUE, 
+                  fileEncoding = "UTF-8")
+
+```
+
+
+Comparacion frecuencias
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+frecuencia_por_grupo <- list(
+  Grupo_0 = c(),
+  Grupo_1 = c(),
+  Grupo_2 = c(),
+  Grupo_3 = c()
+)
+
+# Extract total_frecuencia values for each group
+frecuencia_0 <- sum(dbv$total_frecuencia[dbv$pregrado == 0], na.rm = TRUE)
+frecuencia_1 <- sum(dbv$total_frecuencia[dbv$pregrado == 1], na.rm = TRUE)
+frecuencia_2 <- sum(dbv$total_frecuencia[dbv$pregrado == 2], na.rm = TRUE)
+frecuencia_3 <- sum(dbv$total_frecuencia[dbv$pregrado == 3], na.rm = TRUE)
+
+# Count non-NA values for each group
+n_0 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 0]))
+n_1 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 1]))
+n_2 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 2]))
+n_3 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 3]))
+
+# Create vectors of counts and sample sizes
+x_counts <- c(frecuencia_0, frecuencia_1, frecuencia_2, frecuencia_3)
+n_counts <- c(n_0, n_1, n_2, n_3)
+
+# Debugging: Print values to check
+print("Total frecuencia comparison:")
+print(paste("x_counts:", paste(x_counts, collapse = ", ")))
+print(paste("n_counts:", paste(n_counts, collapse = ", ")))
+
+# Ensure that counts are valid
+if (sum(x_counts) > 0 && all(x_counts <= n_counts, na.rm = TRUE)) {
+  for (g in 1:4) {
+    # Compare this group against all others combined
+    x_group <- x_counts[g]
+    n_group <- n_counts[g]
+    
+    x_other <- sum(x_counts) - x_group
+    n_other <- sum(n_counts) - n_group
+
+    # Ensure valid proportions (avoid division by zero and invalid cases)
+    if (n_group > 0 && n_other > 0 && x_group <= n_group && x_other <= n_other) {
+      test <- prop.test(x = c(x_group, x_other), n = c(n_group, n_other), alternative = "greater", conf.level = 0.90)
+      
+      # If significant, add the group to the results
+      if (test$p.value < 0.05) {
+        frecuencia_por_grupo[[paste0("Grupo_", g - 1)]] <- c(frecuencia_por_grupo[[paste0("Grupo_", g - 1)]], "total_frecuencia")
+      }
+    }
+  }
+} else {
+  print("Skipping due to invalid counts!")
+}
+
+# Print results
+print(frecuencia_por_grupo)
+
+```
+
+#print
+
+```{r include=FALSE,results='asis',echo=FALSE}
+frecuencia_por_grupo <- list(
+  Grupo_0 = unique(frecuencia_por_grupo$Grupo_0),
+  Grupo_1 = unique(frecuencia_por_grupo$Grupo_1),
+  Grupo_2 = unique(frecuencia_por_grupo$Grupo_2),
+  Grupo_3 = unique(frecuencia_por_grupo$Grupo_3)
+)
+
+# Find the max number of words in any group to standardize column lengths
+max_length <- max(sapply(extranjerismos_por_grupo, length))
+
+# Convert to a matrix (filling empty spaces with NA)
+frecuencia_matrix <- do.call(cbind, lapply(frecuencia_por_grupo, function(words) {
+  c(words, rep(NA, max_length - length(words)))  # Fill with NA if shorter
+}))
+
+# Set column names to match groups
+colnames(frecuencia_matrix) <- c("Filologia", "Licenciatura", "Quimica", "Materiales")
+
+# Print the matrix nicely
+print(frecuencia_matrix, quote = FALSE, na.print = "")
+
+```
+
+
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+# Select only the columns frec1 to frec11
+frequencies <- dbv[, grep("^frec[1-9]|^frec10|^frec11$", colnames(dbv))]
+
+# Compute the mean frequency for each column
+column_means <- colMeans(frequencies, na.rm = TRUE)
+
+# Compute 90th and 10th percentile thresholds
+threshold_high <- quantile(column_means, probs = 0.90)
+threshold_low <- quantile(column_means, probs = 0.10)
+
+# Identify columns above 90th percentile (highest frequencies)
+highest_cols <- names(column_means[column_means > threshold_high])
+
+# Identify columns below 10th percentile (lowest frequencies)
+lowest_cols <- names(column_means[column_means < threshold_low])
+
+# Print results
+print(paste("90th percentile threshold (high values):", threshold_high))
+print("Columns with highest frequencies:")
+print(highest_cols)
+
+print(paste("10th percentile threshold (low values):", threshold_low))
+print("Columns with lowest frequencies:")
+print(lowest_cols)
+
+
+```

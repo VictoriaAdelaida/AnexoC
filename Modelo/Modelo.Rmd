@@ -1,0 +1,162 @@
+---
+title: "INFORME VICTORIA 2023"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    number_sections: true
+    theme: spacelab
+    highlight: haddock
+    df_print: paged
+    toc: true
+    toc_float: true
+    printcode: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(prompt=TRUE,fig.path='figurasR/',warning=FALSE,message=FALSE,fig.pos="H",fig.align="center",cache=FALSE,collapse=TRUE,comment="#>")
+knitr::write_bib(c("knitr","lubridate","tidyverse","markdown","rmarkdown","curl","ggplot2","flexdashboard","htmlwidgets","png","jpeg","htmltools","devtools","highcharter","plotly","dplyr","xtable","stringr","DT","magrittr","kableExtra","prettydoc","formattable","leaflet","shiny","data.table","mosaic","gridExtra","plotrix"))
+library(knitr)
+library(markdown)
+library(rmarkdown)
+library(prettydoc)
+library(flexdashboard)
+library(lubridate)
+library(tidyverse)
+library(curl)
+library(magrittr)
+library(stringr)
+library(png)
+library(jpeg)
+library(htmltools)
+library(devtools)
+library(ggplot2)
+library(gridExtra)
+library(xtable)
+library(DT)
+library(kableExtra)
+library(formattable)
+library(shiny)
+library(plotly)
+library(dplyr)
+library(plotrix)
+library(leaflet)
+library(highcharter)
+library(htmlwidgets)
+library(mosaic)
+library(MASS)
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+#Evitar notación científica#
+options(scipen=999)
+#Creo funciones para colorear#
+mis.colores<-colorRampPalette(c("#FFF700","#0FFFFF"))
+col.num<-colorNumeric(mis.colores(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+mis.colores2<-colorRampPalette(c("#F40000","navy"))
+col.num2<-colorNumeric(mis.colores2(1000),domain=0:100,na.color="#00FF00",alpha=0.5,reverse=F)
+#construyo media recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+meanr<-function(a) {
+mean(a,trim=0.1,na.rm=TRUE)
+}
+#construyo desviación típica recortada al 5% por ambos extremos, sin argumento para componer con funciones que no lo piden#
+sdr<-function(a) {
+a<-a[!is.na(a)]
+a<-a[order(a)]
+b<-a[floor(length(a)/20):floor(length(a)*19/20)]
+sd(b)
+}
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+
+#IMPORTANTE! 
+#En la siguiente linea se debe cambiar la ubicación predeterminada del archivo por la que tenga en el computador de quien corre el codigo
+
+dbv <- read.table("C:/Users/Usuario/Downloads/DB.txt", 
+                  header = TRUE, 
+                  sep = "\t", 
+                  na.strings = "NA", 
+                  strip.white = TRUE, 
+                  fileEncoding = "UTF-8")
+```
+
+## Modelo Lineal
+
+```{r include=FALSE,results='asis',echo=FALSE}
+# Extranjerismos
+
+modelo1 <- lm(total_extranjerismos ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv)
+
+modelo2 <- stepAIC(modelo1, direction = "both") 
+summary(modelo2)
+
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+#Frecuencia
+
+modelo_frec_1 <- lm(total_frecuencia ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv)
+
+modelo_frec_2 <- stepAIC(modelo_frec_1, direction = "both") 
+summary(modelo2)
+
+```
+
+
+
+## Modelos para cada carrera
+
+
+```{r include=FALSE,results='asis',echo=FALSE}
+dbv_filtered <- dbv[dbv$pregrado == 0, ]
+modelo_f1 <- lm(total_extranjerismos ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+
+modelo_f2 <- stepAIC(modelo_f1, direction = "both") 
+summary(modelo_f2)
+
+dbv_filtered <- dbv[dbv$pregrado == 1, ]
+modelo_l1 <- lm(total_extranjerismos ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+
+modelo_l2 <- stepAIC(modelo_l1, direction = "both") 
+summary(modelo_l2)
+
+dbv_filtered <- dbv[dbv$pregrado == 2, ]
+modelo_q1 <- lm(total_extranjerismos ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+
+modelo_q2 <- stepAIC(modelo_q1, direction = "both") 
+summary(modelo_q2)
+
+dbv_filtered <- dbv[dbv$pregrado == 3, ]
+modelo_m1 <- lm(total_extranjerismos ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+
+modelo_m2 <- stepAIC(modelo_m1, direction = "both") 
+summary(modelo_m2)
+
+```
+
+```{r include=FALSE,results='asis',echo=FALSE}
+dbv_filtered <- dbv[dbv$pregrado == 0, ]
+modelo__frec_f1 <- lm(total_frecuencia ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+modelo_frec_f2 <- stepAIC(modelo_f1, direction = "both") 
+
+dbv_filtered <- dbv[dbv$pregrado == 1, ]
+modelo_frec_l1 <- lm(total_frecuencia ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+modelo_frec_l2 <- stepAIC(modelo_frec_l1, direction = "both") 
+
+dbv_filtered <- dbv[dbv$pregrado == 2, ]
+modelo_frec_q1 <- lm(total_frecuencia ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+modelo_frec_q2 <- stepAIC(modelo_q1, direction = "both") 
+
+dbv_filtered <- dbv[dbv$pregrado == 3, ]
+modelo_frec_m1 <- lm(total_frecuencia ~ genero+ colegio+ estrato+ ingles+ curso +pregrado+ semestre+uso_carrera+ frecuencia_ocio+	frecuencia_academico+ medio+razon1+	razon2+	razon3+	razon4+	razon5+	razon6+	razon7, data = dbv_filtered)
+modelo_frec_m2 <- stepAIC(modelo_m1, direction = "both") 
+
+
+```
+
+
+
+
+
+
