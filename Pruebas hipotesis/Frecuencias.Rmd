@@ -102,42 +102,41 @@ frecuencia_por_grupo <- list(
   Grupo_3 = c()
 )
 
-# Extract total_frecuencia values for each group
+# Extract total_frecuencia value
 frecuencia_0 <- sum(dbv$total_frecuencia[dbv$pregrado == 0], na.rm = TRUE)
 frecuencia_1 <- sum(dbv$total_frecuencia[dbv$pregrado == 1], na.rm = TRUE)
 frecuencia_2 <- sum(dbv$total_frecuencia[dbv$pregrado == 2], na.rm = TRUE)
 frecuencia_3 <- sum(dbv$total_frecuencia[dbv$pregrado == 3], na.rm = TRUE)
 
-# Count non-NA values for each group
+# Count non-NA 
 n_0 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 0]))
 n_1 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 1]))
 n_2 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 2]))
 n_3 <- sum(!is.na(dbv$total_frecuencia[dbv$pregrado == 3]))
 
-# Create vectors of counts and sample sizes
+# Crear vectores
 x_counts <- c(frecuencia_0, frecuencia_1, frecuencia_2, frecuencia_3)
 n_counts <- c(n_0, n_1, n_2, n_3)
 
-# Debugging: Print values to check
-print("Total frecuencia comparison:")
-print(paste("x_counts:", paste(x_counts, collapse = ", ")))
-print(paste("n_counts:", paste(n_counts, collapse = ", ")))
+# Debugging
+#print("Total frecuencia comparison:")
+#print(paste("x_counts:", paste(x_counts, collapse = ", ")))
+#print(paste("n_counts:", paste(n_counts, collapse = ", ")))
 
-# Ensure that counts are valid
 if (sum(x_counts) > 0 && all(x_counts <= n_counts, na.rm = TRUE)) {
   for (g in 1:4) {
-    # Compare this group against all others combined
+    # Comparar grupos
     x_group <- x_counts[g]
     n_group <- n_counts[g]
     
     x_other <- sum(x_counts) - x_group
     n_other <- sum(n_counts) - n_group
 
-    # Ensure valid proportions (avoid division by zero and invalid cases)
+    # Asegurar proporciones
     if (n_group > 0 && n_other > 0 && x_group <= n_group && x_other <= n_other) {
       test <- prop.test(x = c(x_group, x_other), n = c(n_group, n_other), alternative = "greater", conf.level = 0.90)
       
-      # If significant, add the group to the results
+      # Añadir si significante
       if (test$p.value < 0.05) {
         frecuencia_por_grupo[[paste0("Grupo_", g - 1)]] <- c(frecuencia_por_grupo[[paste0("Grupo_", g - 1)]], "total_frecuencia")
       }
@@ -147,8 +146,8 @@ if (sum(x_counts) > 0 && all(x_counts <= n_counts, na.rm = TRUE)) {
   print("Skipping due to invalid counts!")
 }
 
-# Print results
-print(frecuencia_por_grupo)
+# Print
+#print(frecuencia_por_grupo)
 
 ```
 
@@ -162,43 +161,42 @@ frecuencia_por_grupo <- list(
   Grupo_3 = unique(frecuencia_por_grupo$Grupo_3)
 )
 
-# Find the max number of words in any group to standardize column lengths
+# Find max lenght
 max_length <- max(sapply(extranjerismos_por_grupo, length))
 
-# Convert to a matrix (filling empty spaces with NA)
+# Convertir a matrix
 frecuencia_matrix <- do.call(cbind, lapply(frecuencia_por_grupo, function(words) {
   c(words, rep(NA, max_length - length(words)))  # Fill with NA if shorter
 }))
 
-# Set column names to match groups
+# Set col names
 colnames(frecuencia_matrix) <- c("Filologia", "Licenciatura", "Quimica", "Materiales")
 
-# Print the matrix nicely
+# Print
 print(frecuencia_matrix, quote = FALSE, na.print = "")
 
 ```
 
 
-
+Frecuencias mas y menos comunes
 
 ```{r include=FALSE,results='asis',echo=FALSE}
-# Select only the columns frec1 to frec11
+# Select cols frec1 a frec11
 frequencies <- dbv[, grep("^frec[1-9]|^frec10|^frec11$", colnames(dbv))]
 
-# Compute the mean frequency for each column
 column_means <- colMeans(frequencies, na.rm = TRUE)
 
-# Compute 90th and 10th percentile thresholds
+# 90th y 10th percentile
 threshold_high <- quantile(column_means, probs = 0.90)
 threshold_low <- quantile(column_means, probs = 0.10)
 
-# Identify columns above 90th percentile (highest frequencies)
+# highest frequencies
 highest_cols <- names(column_means[column_means > threshold_high])
 
-# Identify columns below 10th percentile (lowest frequencies)
+# lowest frequencies
 lowest_cols <- names(column_means[column_means < threshold_low])
 
-# Print results
+# Print
 print(paste("90th percentile threshold (high values):", threshold_high))
 print("Columns with highest frequencies:")
 print(highest_cols)
