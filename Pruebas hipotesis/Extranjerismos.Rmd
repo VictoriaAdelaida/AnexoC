@@ -95,7 +95,7 @@ Comparacion extranjerismos
 
 ```{r include=FALSE,results='asis',echo=FALSE}
 
-# Create an empty list to store results
+# Crear listas
 extranjerismos_por_grupo <- list(
   Grupo_0 = character(),
   Grupo_1 = character(),
@@ -103,7 +103,7 @@ extranjerismos_por_grupo <- list(
   Grupo_3 = character()
 )
 
-# Loop through all extranjerismos (assuming they start at column 13)
+# Loop extranjerismos
 for (i in 13:ncol(dbv)) {
   # Extract counts per group (sum occurrences)
   x_0 <- sum(dbv[, i][dbv$pregrado == 0], na.rm = TRUE)
@@ -122,7 +122,7 @@ for (i in 13:ncol(dbv)) {
   n_counts <- c(n_0, n_1, n_2, n_3)
 
 
-  # Ensure that counts are not greater than the number of responses
+  # Asegurar valor de x y n
   if (sum(x_counts) > 0 && all(x_counts <= n_counts, na.rm = TRUE)) {
     for (g in 1:4) {
       # Compare this group against all others combined
@@ -132,11 +132,11 @@ for (i in 13:ncol(dbv)) {
       x_other <- sum(x_counts) - x_group
       n_other <- sum(n_counts) - n_group
 
-      # Ensure valid proportions (avoid division by zero and invalid cases)
+      # Asegurar proporciones
       if (n_group > 0 && n_other > 0 && x_group <= n_group && x_other <= n_other) {
         test <- prop.test(x = c(x_group, x_other), n = c(n_group, n_other), alternative = "greater", conf.level = 0.90)
         
-        # If significant, add extranjerismo to the corresponding group
+        # Add a grupo si significante
         if (test$p.value < 0.05) {
           extranjerismos_por_grupo[[paste0("Grupo_", g - 1)]] <- c(extranjerismos_por_grupo[[paste0("Grupo_", g - 1)]], colnames(dbv)[i])
         }
@@ -162,18 +162,17 @@ extranjerismos_por_grupo <- list(
   Grupo_3 = unique(extranjerismos_por_grupo$Grupo_3)
 )
 
-# Find the max number of words in any group to standardize column lengths
 max_length <- max(sapply(extranjerismos_por_grupo, length))
 
-# Convert to a matrix (filling empty spaces with NA)
+# Convertir a matrix
 extranjerismos_matrix <- do.call(cbind, lapply(extranjerismos_por_grupo, function(words) {
   c(words, rep(NA, max_length - length(words)))  # Fill with NA if shorter
 }))
 
-# Set column names to match groups
+# Set col names
 colnames(extranjerismos_matrix) <- c("Filologia", "Licenciatura", "Quimica", "Materiales")
 
-# Print the matrix nicely
+# Print
 print(extranjerismos_matrix, quote = FALSE, na.print = "")
 
 ```
